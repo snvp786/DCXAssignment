@@ -1,0 +1,40 @@
+{
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Description":"dcx lambda function",
+   "Resources":{
+      "dcxassignmentlambda":{
+         "Type":"AWS::Lambda::Function",
+         "DeletionPolicy":"Retain",
+         "Properties":{
+            "FunctionName":"dcxlambdaexe",
+            "Handler":"index.lambda_handler",
+            "Role":"arn:aws:iam::612680552458:role/DCXCustomLambdaexecutionRole",
+            "Code":{
+               "ZipFile":{
+                  "Fn::Join":[
+                     "\n",
+                     [
+                        "import json",
+                        "import cfnresponse",
+                        "import boto3",
+                        "def lambda_handler(event, context):",
+                        "	paramkey = 'UserName'",
+                        "	bucketname = 'dxcassignment'",
+                        "	s3 = boto3.resource('s3')",
+                        "	ssm = boto3.client('ssm')",
+                        "	parameter = ssm.get_parameter(Name=paramkey, WithDecryption=True)",
+                        "	s3object = s3.Object(bucketname, 'paramnew2.json')",
+                        "	paramvalue = parameter['Parameter']['Value']",
+                        "	jsondata = {\"name\":paramkey, \"value\":paramvalue}",
+                        "	s3object.put(Body=(bytes(json.dumps(jsondata).encode('UTF-8'))))",
+                        "	cfnresponse.send(event, context, cfnresponse.SUCCESS, jsondata, \"CustomResourcePhysicalID\")"
+                     ]
+                  ]
+               }
+            },
+            "Runtime":"python3.6",
+            "Timeout":25
+         }
+      }
+   }
+}
